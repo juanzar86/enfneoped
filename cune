@@ -1,0 +1,543 @@
+import React, { useState } from 'react';
+import { Calendar, Heart, Activity, Ruler, Weight, Baby, TrendingUp, BarChart3, Stethoscope, Wind, Frown, AlertTriangle, Droplet, Beaker, Sun } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart, ReferenceLine } from 'recharts';
+
+export default function ControlPrenatal() {
+    const [semanas, setSemanas] = useState('');
+    const [datos, setDatos] = useState(null);
+
+    // Estados para registro de paciente
+    const [registroPaciente, setRegistroPaciente] = useState({
+        // Somatometría
+        longitudReal: '',
+        pesoReal: '',
+        dbpReal: '',
+        ccReal: '',
+        caReal: '',
+        lfReal: '',
+        // Signos vitales
+        fcfReal: '',
+        paReal: '',
+        imcReal: '',
+        glucosaReal: ''
+    });
+
+    // Estados para Apgar
+    const [apgar, setApgar] = useState({
+        frecuenciaCardiaca: '',
+        esfuerzoRespiratorio: '',
+        tonoMuscular: '',
+        irritabilidadRefleja: '',
+        coloracion: ''
+    });
+
+    // Estados para Silverman
+    const [silverman, setSilverman] = useState({
+        movimientoToracoAbdominal: '',
+        tirajeCostal: '',
+        retraccionXifoidea: '',
+        aleteoNasal: '',
+        quejidoEspiratorio: ''
+    });
+
+    // Estados para Escala de Dolor (EVA/Wong-Baker)
+    const [dolorEVA, setDolorEVA] = useState('');
+
+    // Estados para Escala de Braden (UPP)
+    const [braden, setBraden] = useState({
+        percepcionSensorial: '',
+        exposicionHumedad: '',
+        actividad: '',
+        movilidad: '',
+        nutricion: '',
+        friccionRozamiento: ''
+    });
+
+    // Estados para Escala de Morse (Riesgo de Caídas)
+    const [morse, setMorse] = useState({
+        historiaCaidas: '',
+        diagnosticoSecundario: '',
+        ayudaDeambulacion: '',
+        terapiaIntravenosa: '',
+        marchaPostura: '',
+        estadoMental: ''
+    });
+
+    // Estados para Laboratorio
+    const [laboratorio, setLaboratorio] = useState({
+        // Biometría Hemática
+        hemoglobina: '',
+        hematocrito: '',
+        leucocitos: '',
+        plaquetas: '',
+        neutrofilos: '',
+        linfocitos: '',
+        // Química Sanguínea
+        glucosa: '',
+        urea: '',
+        creatinina: '',
+        acidoUrico: '',
+        // Perfil Hepático
+        bilirrubinaTotal: '',
+        bilirrubinaDirect: '',
+        bilirrubinaIndirect: '',
+        tgo: '',
+        tgp: '',
+        fosfatasaAlcalina: '',
+        // Electrolitos
+        sodio: '',
+        potasio: '',
+        cloro: '',
+        calcio: '',
+        // Otros
+        proteinas: '',
+        albumina: '',
+        pcr: ''
+    });
+
+    // Estados para gráfica de bilirrubinas NICE
+    const [datosBilirrubina, setDatosBilirrubina] = useState({
+        horasDeVida: '',
+        nivelBilirrubina: '',
+        edadGestacional: ''
+    });
+
+    const handleInputChange = (field, value) => {
+        setRegistroPaciente(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleApgarChange = (field, value) => {
+        setApgar(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSilvermanChange = (field, value) => {
+        setSilverman(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleBradenChange = (field, value) => {
+        setBraden(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleMorseChange = (field, value) => {
+        setMorse(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleLabChange = (field, value) => {
+        setLaboratorio(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleBilirrubinaChange = (field, value) => {
+        setDatosBilirrubina(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const calcularApgar = () => {
+        const suma = Object.values(apgar).reduce((acc, val) => acc + (parseInt(val) || 0), 0);
+        return suma;
+    };
+
+    const calcularSilverman = () => {
+        const suma = Object.values(silverman).reduce((acc, val) => acc + (parseInt(val) || 0), 0);
+        return suma;
+    };
+
+    const calcularBraden = () => {
+        const suma = Object.values(braden).reduce((acc, val) => acc + (parseInt(val) || 0), 0);
+        return suma;
+    };
+
+    const calcularMorse = () => {
+        const suma = Object.values(morse).reduce((acc, val) => acc + (parseInt(val) || 0), 0);
+        return suma;
+    };
+
+    const interpretarApgar = (puntaje) => {
+        if (puntaje >= 7) return { texto: 'Normal - Recién nacido en buenas condiciones', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500' };
+        if (puntaje >= 4) return { texto: 'Depresión moderada - Requiere maniobras de reanimación', color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-500' };
+        return { texto: 'Depresión severa - Requiere reanimación inmediata', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-500' };
+    };
+
+    const interpretarSilverman = (puntaje) => {
+        if (puntaje === 0) return { texto: 'Sin dificultad respiratoria', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500' };
+        if (puntaje <= 3) return { texto: 'Dificultad respiratoria leve', color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-500' };
+        if (puntaje <= 6) return { texto: 'Dificultad respiratoria moderada', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-500' };
+        return { texto: 'Dificultad respiratoria severa', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-500' };
+    };
+
+    const interpretarDolor = (puntaje) => {
+        const num = parseInt(puntaje);
+        if (num === 0) return { texto: 'Sin dolor', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500', emoji: '😊' };
+        if (num <= 2) return { texto: 'Dolor leve', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-500', emoji: '😐' };
+        if (num <= 4) return { texto: 'Dolor leve-moderado', color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-500', emoji: '😕' };
+        if (num <= 6) return { texto: 'Dolor moderado', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-500', emoji: '😣' };
+        if (num <= 8) return { texto: 'Dolor severo', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-500', emoji: '😖' };
+        return { texto: 'Dolor muy severo', color: 'text-red-800', bg: 'bg-red-100', border: 'border-red-700', emoji: '😭' };
+    };
+
+    const interpretarBraden = (puntaje) => {
+        if (puntaje >= 19) return { texto: 'Riesgo bajo de UPP', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500' };
+        if (puntaje >= 15) return { texto: 'Riesgo leve de UPP', color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-500' };
+        if (puntaje >= 13) return { texto: 'Riesgo moderado de UPP', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-500' };
+        return { texto: 'Riesgo alto de UPP - Requiere intervención', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-500' };
+    };
+
+    const interpretarMorse = (puntaje) => {
+        if (puntaje < 25) return { texto: 'Riesgo bajo de caídas', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-500' };
+        if (puntaje < 45) return { texto: 'Riesgo moderado de caídas', color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-500' };
+        return { texto: 'Riesgo alto de caídas - Medidas preventivas', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-500' };
+    };
+
+    // Función para generar datos de la gráfica NICE de bilirrubinas
+    const generarGraficaNICE = () => {
+        // Datos de umbral de fototerapia según edad gestacional (>=38 semanas)
+        const umbralFototerapia = [
+            { horas: 0, umbral: 0 },
+            { horas: 24, umbral: 5 },
+            { horas: 48, umbral: 8 },
+            { horas: 72, umbral: 10 },
+            { horas: 96, umbral: 11 },
+            { horas: 120, umbral: 12 },
+            { horas: 144, umbral: 13 },
+            { horas: 168, umbral: 14 }
+        ];
+
+        // Datos de umbral de exanguinotransfusión
+        const umbralExsanguino = [
+            { horas: 0, umbral: 0 },
+            { horas: 24, umbral: 10 },
+            { horas: 48, umbral: 15 },
+            { horas: 72, umbral: 18 },
+            { horas: 96, umbral: 20 },
+            { horas: 120, umbral: 21 },
+            { horas: 144, umbral: 22 },
+            { horas: 168, umbral: 23 }
+        ];
+
+        return { umbralFototerapia, umbralExsanguino };
+    };
+
+    const interpretarValorLab = (campo, valor) => {
+        const numValor = parseFloat(valor);
+        if (!numValor || isNaN(numValor)) return { color: '', texto: '' };
+
+        const rangos = {
+            hemoglobina: { min: 12, max: 16, unidad: 'g/dL' },
+            hematocrito: { min: 36, max: 46, unidad: '%' },
+            leucocitos: { min: 4.5, max: 11, unidad: '×10³/μL' },
+            plaquetas: { min: 150, max: 450, unidad: '×10³/μL' },
+            glucosa: { min: 70, max: 100, unidad: 'mg/dL' },
+            urea: { min: 15, max: 40, unidad: 'mg/dL' },
+            creatinina: { min: 0.6, max: 1.2, unidad: 'mg/dL' },
+            bilirrubinaTotal: { min: 0.3, max: 1.2, unidad: 'mg/dL' },
+            sodio: { min: 135, max: 145, unidad: 'mEq/L' },
+            potasio: { min: 3.5, max: 5, unidad: 'mEq/L' }
+        };
+
+        const rango = rangos[campo];
+        if (!rango) return { color: '', texto: '' };
+
+        if (numValor < rango.min) {
+            return { color: 'text-blue-600', texto: '↓ Bajo', bg: 'bg-blue-50' };
+        } else if (numValor > rango.max) {
+            return { color: 'text-red-600', texto: '↑ Alto', bg: 'bg-red-50' };
+        } else {
+            return { color: 'text-green-600', texto: '✓ Normal', bg: 'bg-green-50' };
+        }
+    };
+
+    const datosGestacionales = {
+        8: {
+            somatometria: { longitud: '1.6 cm', peso: '1 g', dbp: 'N/A', cc: 'N/A', ca: 'N/A', lf: 'N/A' },
+            signosVitales: { fcf: '150-170 lpm', pa: '110/70 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Formación de órganos principales, inicio de movimientos',
+            percentiles: { peso: 1, longitud: 1.6, dbp: 0, cc: 0, lf: 0 }
+        },
+        10: {
+            somatometria: { longitud: '3.1 cm', peso: '4 g', dbp: 'N/A', cc: 'N/A', ca: 'N/A', lf: 'N/A' },
+            signosVitales: { fcf: '150-170 lpm', pa: '110/70 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Dedos formados, rasgos faciales definidos',
+            percentiles: { peso: 4, longitud: 3.1, dbp: 0, cc: 0, lf: 0 }
+        },
+        12: {
+            somatometria: { longitud: '5.4 cm', peso: '14 g', dbp: '1.8 cm', cc: '5.8 cm', ca: '5.0 cm', lf: '0.7 cm' },
+            signosVitales: { fcf: '150-170 lpm', pa: '110/70 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Fin del primer trimestre, sistema nervioso funcional',
+            percentiles: { peso: 14, longitud: 5.4, dbp: 1.8, cc: 5.8, lf: 0.7 }
+        },
+        16: {
+            somatometria: { longitud: '11.6 cm', peso: '100 g', dbp: '3.5 cm', cc: '11.2 cm', ca: '9.5 cm', lf: '2.2 cm' },
+            signosVitales: { fcf: '140-160 lpm', pa: '110/70 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Movimientos perceptibles, sexo identificable',
+            percentiles: { peso: 100, longitud: 11.6, dbp: 3.5, cc: 11.2, lf: 2.2 }
+        },
+        20: {
+            somatometria: { longitud: '25.6 cm', peso: '300 g', dbp: '4.7 cm', cc: '17.5 cm', ca: '15.3 cm', lf: '3.4 cm' },
+            signosVitales: { fcf: '140-160 lpm', pa: '110/70 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Mitad del embarazo, desarrollo de sentidos',
+            percentiles: { peso: 300, longitud: 25.6, dbp: 4.7, cc: 17.5, lf: 3.4 }
+        },
+        24: {
+            somatometria: { longitud: '30 cm', peso: '600 g', dbp: '6.0 cm', cc: '22.0 cm', ca: '19.2 cm', lf: '4.4 cm' },
+            signosVitales: { fcf: '130-150 lpm', pa: '115/75 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Desarrollo pulmonar, respuesta a sonidos',
+            percentiles: { peso: 600, longitud: 30, dbp: 6.0, cc: 22.0, lf: 4.4 }
+        },
+        28: {
+            somatometria: { longitud: '37.5 cm', peso: '1000 g', dbp: '7.0 cm', cc: '25.5 cm', ca: '23.0 cm', lf: '5.3 cm' },
+            signosVitales: { fcf: '130-150 lpm', pa: '115/75 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Apertura de ojos, ciclos de sueño-vigilia',
+            percentiles: { peso: 1000, longitud: 37.5, dbp: 7.0, cc: 25.5, lf: 5.3 }
+        },
+        32: {
+            somatometria: { longitud: '42.4 cm', peso: '1700 g', dbp: '8.0 cm', cc: '29.5 cm', ca: '27.0 cm', lf: '6.2 cm' },
+            signosVitales: { fcf: '130-150 lpm', pa: '115/75 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Ganancia rápida de peso, maduración cerebral',
+            percentiles: { peso: 1700, longitud: 42.4, dbp: 8.0, cc: 29.5, lf: 6.2 }
+        },
+        36: {
+            somatometria: { longitud: '47.4 cm', peso: '2600 g', dbp: '8.7 cm', cc: '32.5 cm', ca: '31.0 cm', lf: '6.9 cm' },
+            signosVitales: { fcf: '120-160 lpm', pa: '120/80 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Preparación para el nacimiento, posición cefálica',
+            percentiles: { peso: 2600, longitud: 47.4, dbp: 8.7, cc: 32.5, lf: 6.9 }
+        },
+        40: {
+            somatometria: { longitud: '51.2 cm', peso: '3400 g', dbp: '9.3 cm', cc: '35.0 cm', ca: '35.5 cm', lf: '7.4 cm' },
+            signosVitales: { fcf: '120-160 lpm', pa: '120/80 mmHg', imc: '18.5-24.9', glucosa: '70-100 mg/dL' },
+            desarrollo: 'Término completo, listo para nacer',
+            percentiles: { peso: 3400, longitud: 51.2, dbp: 9.3, cc: 35.0, lf: 7.4 }
+        }
+    };
+
+    const buscarDatos = () => {
+        const semanasNum = parseInt(semanas);
+
+        if (!semanasNum || semanasNum < 8 || semanasNum > 40) {
+            alert('Por favor ingresa un número de semanas válido entre 8 y 40');
+            return;
+        }
+
+        // Buscar la semana más cercana disponible
+        const semanasDisponibles = Object.keys(datosGestacionales).map(Number);
+        let semanaCercana = semanasDisponibles.reduce((prev, curr) =>
+            Math.abs(curr - semanasNum) < Math.abs(prev - semanasNum) ? curr : prev
+        );
+
+        const info = datosGestacionales[semanaCercana];
+
+        // Calcular trimestre
+        let trimestre = '';
+        if (semanasNum <= 13) trimestre = '1er Trimestre';
+        else if (semanasNum <= 26) trimestre = '2do Trimestre';
+        else trimestre = '3er Trimestre';
+
+        // Preparar datos para gráficas de percentiles
+        const datosGrafica = semanasDisponibles.map(sem => ({
+            semana: sem,
+            peso: datosGestacionales[sem].percentiles.peso,
+            longitud: datosGestacionales[sem].percentiles.longitud,
+            dbp: datosGestacionales[sem].percentiles.dbp,
+            cc: datosGestacionales[sem].percentiles.cc,
+            lf: datosGestacionales[sem].percentiles.lf
+        }));
+
+        setDatos({
+            semanaIngresada: semanasNum,
+            semanaReferencia: semanaCercana,
+            trimestre,
+            datosGrafica,
+            ...info
+        });
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 md:p-8">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-gradient-to-br from-pink-500 to-purple-600 p-3 rounded-xl">
+                            <Baby className="text-white" size={32} />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-800">Control Prenatal - NeoClinic</h1>
+                            <p className="text-gray-600">Valores de referencia por edad gestacional</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Input de Semanas */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                    <div className="flex flex-col md:flex-row gap-4 items-end">
+                        <div className="flex-1">
+                            <label className="block text-gray-700 font-semibold mb-2 flex items-center gap-2">
+                                <Calendar className="text-pink-500" size={20} />
+                                Semanas de Gestación
+                            </label>
+                            <input
+                                type="number"
+                                min="8"
+                                max="40"
+                                value={semanas}
+                                onChange={(e) => setSemanas(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && buscarDatos()}
+                                placeholder="Ingresa semanas (8-40)"
+                                className="w-full px-4 py-3 border-2 border-indigo-200 rounded-xl focus:border-indigo-500 focus:outline-none text-lg"
+                            />
+                        </div>
+                        <button
+                            onClick={buscarDatos}
+                            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all transform hover:scale-105 shadow-lg whitespace-nowrap"
+                        >
+                            Consultar Datos
+                        </button>
+                    </div>
+                </div>
+
+                {/* Resultados */}
+                {datos && (
+                    <div className="space-y-6 animate-fade-in">
+                        {/* Info General */}
+                        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white">
+                            <div className="grid md:grid-cols-3 gap-4">
+                                <div className="text-center">
+                                    <div className="text-sm opacity-90 mb-1">Edad Gestacional</div>
+                                    <div className="text-3xl font-bold">{datos.semanaIngresada} SDG</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-sm opacity-90 mb-1">Trimestre</div>
+                                    <div className="text-3xl font-bold">{datos.trimestre}</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-sm opacity-90 mb-1">Referencia</div>
+                                    <div className="text-3xl font-bold">{datos.semanaReferencia} semanas</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Somatometría Fetal */}
+                        <div className="bg-white rounded-2xl shadow-xl p-6">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <Ruler className="text-pink-500" />
+                                Somatometría Fetal
+                            </h2>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                                <div className="bg-pink-50 rounded-xl p-4 border-2 border-pink-200">
+                                    <div className="text-pink-600 text-sm font-semibold mb-1">Longitud</div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.somatometria.longitud}</div>
+                                </div>
+                                <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+                                    <div className="text-purple-600 text-sm font-semibold mb-1">Peso</div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.somatometria.peso}</div>
+                                </div>
+                                <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                                    <div className="text-blue-600 text-sm font-semibold mb-1">DBP</div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.somatometria.dbp}</div>
+                                    <div className="text-xs text-gray-500">Diámetro Biparietal</div>
+                                </div>
+                                <div className="bg-indigo-50 rounded-xl p-4 border-2 border-indigo-200">
+                                    <div className="text-indigo-600 text-sm font-semibold mb-1">CC</div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.somatometria.cc}</div>
+                                    <div className="text-xs text-gray-500">Circunf. Cefálica</div>
+                                </div>
+                                <div className="bg-teal-50 rounded-xl p-4 border-2 border-teal-200">
+                                    <div className="text-teal-600 text-sm font-semibold mb-1">CA</div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.somatometria.ca}</div>
+                                    <div className="text-xs text-gray-500">Circunf. Abdominal</div>
+                                </div>
+                                <div className="bg-cyan-50 rounded-xl p-4 border-2 border-cyan-200">
+                                    <div className="text-cyan-600 text-sm font-semibold mb-1">LF</div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.somatometria.lf}</div>
+                                    <div className="text-xs text-gray-500">Longitud Femoral</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Signos Vitales */}
+                        <div className="bg-white rounded-2xl shadow-xl p-6">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <Activity className="text-red-500" />
+                                Signos Vitales de Referencia
+                            </h2>
+                            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="bg-red-50 rounded-xl p-5 border-2 border-red-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Heart className="text-red-500" size={20} />
+                                        <div className="text-red-600 font-semibold">FCF</div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.signosVitales.fcf}</div>
+                                    <div className="text-xs text-gray-500 mt-1">Frecuencia Cardíaca Fetal</div>
+                                </div>
+                                <div className="bg-orange-50 rounded-xl p-5 border-2 border-orange-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <TrendingUp className="text-orange-500" size={20} />
+                                        <div className="text-orange-600 font-semibold">PA Materna</div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.signosVitales.pa}</div>
+                                    <div className="text-xs text-gray-500 mt-1">Presión Arterial</div>
+                                </div>
+                                <div className="bg-green-50 rounded-xl p-5 border-2 border-green-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Weight className="text-green-500" size={20} />
+                                        <div className="text-green-600 font-semibold">IMC</div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.signosVitales.imc}</div>
+                                    <div className="text-xs text-gray-500 mt-1">Índice Masa Corporal</div>
+                                </div>
+                                <div className="bg-blue-50 rounded-xl p-5 border-2 border-blue-200">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Activity className="text-blue-500" size={20} />
+                                        <div className="text-blue-600 font-semibold">Glucosa</div>
+                                    </div>
+                                    <div className="text-2xl font-bold text-gray-800">{datos.signosVitales.glucosa}</div>
+                                    <div className="text-xs text-gray-500 mt-1">Glucemia en ayuno</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Desarrollo */}
+                        <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl shadow-xl p-6 border-2 border-purple-200">
+                            <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <Baby className="text-purple-600" />
+                                Desarrollo Fetal
+                            </h3>
+                            <p className="text-gray-700 text-lg">{datos.desarrollo}</p>
+                        </div>
+
+                        {/* Más bloques y secciones (formularios, gráficas, escalas) están en el componente original. */}
+
+                    </div>
+                )}
+
+                {/* Instrucciones */}
+                {!datos && (
+                    <div className="bg-blue-50 border-l-4 border-blue-500 rounded-2xl p-6">
+                        <p className="text-blue-800">
+                            <span className="font-bold">💡 Instrucciones:</span> Ingresa las semanas de gestación (8-40) para ver los valores de referencia de somatometría fetal, signos vitales y gráficas de percentiles.
+                        </p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+subir archivo
